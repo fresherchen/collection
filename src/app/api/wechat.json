@@ -1,0 +1,614 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a sample server Wechat server.\n\n本service是基于nodejs开发的，以调用API的方式对外提供Wechat服务\n\n[Learn about Swagger](http://swagger.io) or join the IRC channel `#swagger` on irc.freenode.net.\n\nFor this sample, you can use the api key `special-key` to test the authorization filters\n",
+        "version": "0.1.0",
+        "title": "Wechat",
+        "contact": {
+            "name": "jpchen@leadstec.com"
+        }
+    },
+    "host": "wx.qcampus.cn",
+    "schemes": [
+        "http"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/api/{filename}": {
+            "get": {
+                "tags": [
+                    "api"
+                ],
+                "summary": "Get the api json file",
+                "description": "json 格式文档",
+                "operationId": "getApi",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "filename",
+                        "description": "api文档的名字",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success operation",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/schedules": {
+            "get": {
+                "tags": [
+                    "schedules"
+                ],
+                "summary": "Get the schedules list by condition",
+                "description": "",
+                "operationId": "getScheduleList",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "key",
+                        "description": "the key to find the articles",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Articles"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "schedules"
+                ],
+                "summary": "create a schedule task to send message to target user",
+                "description": "生成定时发送任务",
+                "operationId": "createSchedule",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "schedule",
+                        "description": "创建定时发送任务的参数",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "artObj": {
+                                    "type": "object",
+                                    "properties": {
+                                        "articles": {
+                                            "$ref": "#/definitions/Articles"
+                                        }
+                                    }
+                                },
+                                "touser": {
+                                    "type": "array",
+                                    "description": "填写图文消息的接收者，一串OpenID列表，OpenID最少2个，最多10000个",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "filter": {
+                                    "type": "object",
+                                    "description": "用于设定图文消息的接收者",
+                                    "properties": {
+                                        "is_to_all": {
+                                            "type": "boolean",
+                                            "description": "用于设定是否向全部用户发送，值为true或false，选择true该消息群发给所有用户，选择false可根据tag_id发送给指定群组的用户"
+                                        },
+                                        "tag_id": {
+                                            "type": "string",
+                                            "description": "群发到的标签的tag_id，参加用户管理中用户分组接口，若is_to_all值为true，可不填写tag_id"
+                                        }
+                                    }
+                                },
+                                "mpnews": {
+                                    "type": "object",
+                                    "description": "用于设定即将发送的图文消息",
+                                    "properties": {
+                                        "media_id": {
+                                            "type": "string",
+                                            "description": ""
+                                        }
+                                    }
+                                },
+                                "msgtype": {
+                                    "type": "string",
+                                    "description": "群发的消息类型，图文消息为mpnews，文本消息为text，语音为voice，音乐为music，图片为image，视频为video，卡券为wxcard"
+                                },
+                                "sendOn": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "description": "设置要发送的日期，必须大于当前时间"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success operation",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "rest_auth": [
+                            "write_rest",
+                            "read_rest"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/schedules/{scheduleId}": {
+            "get": {
+                "tags": [
+                    "schedules"
+                ],
+                "summary": "get a schedule task by id",
+                "description": "通过id获取某一发送任务",
+                "operationId": "getSchedule",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "scheduleId",
+                        "description": "schedule id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success operation",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "rest_auth": [
+                            "write_rest",
+                            "read_rest"
+                        ]
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "schedules"
+                ],
+                "summary": "update the schedule task",
+                "description": "update schedule task by scheduleId",
+                "operationId": "updateSchedule",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "scheduleId",
+                        "description": "schedule id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "schedule",
+                        "description": "schedule task object  which needed to update",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "artObj": {
+                                    "type": "object",
+                                    "properties": {
+                                        "articles": {
+                                            "$ref": "#/definitions/Articles"
+                                        }
+                                    }
+                                },
+                                "touser": {
+                                    "type": "array",
+                                    "description": "填写图文消息的接收者，一串OpenID列表，OpenID最少2个，最多10000个",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "filter": {
+                                    "type": "object",
+                                    "description": "用于设定图文消息的接收者",
+                                    "properties": {
+                                        "is_to_all": {
+                                            "type": "boolean",
+                                            "description": "用于设定是否向全部用户发送，值为true或false，选择true该消息群发给所有用户，选择false可根据tag_id发送给指定群组的用户"
+                                        },
+                                        "tag_id": {
+                                            "type": "string",
+                                            "description": "群发到的标签的tag_id，参加用户管理中用户分组接口，若is_to_all值为true，可不填写tag_id"
+                                        }
+                                    }
+                                },
+                                "mpnews": {
+                                    "type": "object",
+                                    "description": "用于设定即将发送的图文消息",
+                                    "properties": {
+                                        "media_id": {
+                                            "type": "string",
+                                            "description": ""
+                                        }
+                                    }
+                                },
+                                "msgtype": {
+                                    "type": "string",
+                                    "description": "群发的消息类型，图文消息为mpnews，文本消息为text，语音为voice，音乐为music，图片为image，视频为video，卡券为wxcard"
+                                },
+                                "sendOn": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "description": "设置要发送的日期，必须大于当前时间"
+                                },
+                                "status": {
+                                    "type": "boolean"
+                                },
+                                "index": {
+                                    "type": "integer",
+                                    "format": "int32"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success operation",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "rest_auth": [
+                            "write_rest",
+                            "read_rest"
+                        ]
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "schedules"
+                ],
+                "summary": "delete a schedule task by id",
+                "description": "通过id删除某一素材和 schedules task",
+                "operationId": "deleteSchedule",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "scheduleId",
+                        "description": "schedule id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success operation",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "rest_auth": [
+                            "write_rest",
+                            "read_rest"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/account/qrcode": {
+            "post": {
+                "tags": [
+                    "account"
+                ],
+                "summary": "create a qrcode ticket",
+                "description": "生成带参数的二维码，根据action_name参数不同分为临时和永久两种",
+                "operationId": "createAccount",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "qrcode",
+                        "description": "生成二维码要上传的参数",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/Qrcode"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success operation",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "rest_auth": [
+                            "write_rest",
+                            "read_rest"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/account/shorturl": {
+            "post": {
+                "tags": [
+                    "account"
+                ],
+                "summary": "将一条长链接转成短链接",
+                "description": "Returns a short url",
+                "operationId": "shorturl",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "shorturl",
+                        "description": "长链接转短链接的参数",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/shorturl"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success updated!",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "rest_auth": [
+                            "write_rest",
+                            "read_rest"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/custom": {
+            "get": {
+                "tags": [
+                    "custom"
+                ],
+                "summary": "获取客服基本信息",
+                "description": "Returns custom list",
+                "operationId": "getKfList",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success operate!",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "rest_auth": [
+                            "write_rest",
+                            "read_rest"
+                        ]
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "custom"
+                ],
+                "summary": "添加客服帐号",
+                "description": "add a custon account",
+                "operationId": "addkfaccount",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "custom",
+                        "description": "添加客服账号的参数",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/shorturl"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success updated!",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "rest_auth": [
+                            "write_rest",
+                            "read_rest"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "securityDefinitions": {
+        "api_key": {
+            "type": "apiKey",
+            "name": "api_key",
+            "in": "header"
+        },
+        "rest_auth": {
+            "type": "oauth2",
+            "authorizationUrl": "http://id.leadstec.com/auth/",
+            "flow": "implicit",
+            "scopes": {
+                "write_rest": "modify rest in your account",
+                "read_rest": "read your rest"
+            }
+        }
+    },
+    "definitions": {
+        "Articles": {
+            "type": "array",
+            "description": "图文消息，一个图文消息支持1到8条图文",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "thumb_media_id": {
+                        "type": "string",
+                        "description": "暂时不传，图文消息缩略图的media_id，可以在基础支持-上传多媒体文件接口中获得"
+                    },
+                    "author": {
+                        "type": "string",
+                        "description": "图文消息的作者"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "图文消息的标题"
+                    },
+                    "content_source_url": {
+                        "type": "string",
+                        "description": "在图文消息页面点击“阅读原文”后的页面，受安全限制，如需跳转Appstore，可以使用itun.es或appsto.re的短链服务，并在短链后增加 #wechat_redirect 后缀。"
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "图文消息页面的内容，支持HTML标签。具备微信支付权限的公众号，可以使用a标签，其他公众号不能使用"
+                    },
+                    "digest": {
+                        "type": "string",
+                        "description": "图文消息的描述"
+                    },
+                    "show_cover_pic": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "是否显示封面，1为显示，0为不显示",
+                        "enum": [
+                            0,
+                            1
+                        ]
+                    },
+                    "url": {
+                        "type": "string",
+                        "description": "‘thumb_media_id’为空，可填图片url获取media_id"
+                    }
+                }
+            }
+        },
+        "Qrcode": {
+            "type": "object",
+            "required": [
+                "action_name",
+                "action_info"
+            ],
+            "properties": {
+                "expire_seconds": {
+                    "type": "integer",
+                    "description": "该二维码有效时间，以秒为单位。 最大不超过2592000（即30天），此字段如果不填，则默认有效期为30秒。",
+                    "example": 604800,
+                    "maximum": 2592000
+                },
+                "action_name": {
+                    "type": "string",
+                    "description": "二维码类型，QR_SCENE为临时,QR_LIMIT_SCENE为永久,QR_LIMIT_STR_SCENE为永久的字符串参数值"
+                },
+                "action_info": {
+                    "type": "string",
+                    "description": "二维码详细信息"
+                },
+                "scene_id": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "场景值ID，临时二维码时为32位非0整型，永久二维码时最大值为100000（目前参数只支持1--100000）",
+                    "minimum": 1,
+                    "maximum": 100000
+                },
+                "scene_str": {
+                    "type": "string",
+                    "description": "场景值ID（字符串形式的ID），字符串类型，长度限制为1到64，仅永久二维码支持此字段",
+                    "minLength": 1,
+                    "maxLength": 64
+                }
+            }
+        },
+        "shorturl": {
+            "type": "object",
+            "required": [
+                "action",
+                "long_url"
+            ],
+            "properties": {
+                "action": {
+                    "type": "integer",
+                    "description": "此处填long2short，代表长链接转短链接"
+                },
+                "long_url": {
+                    "type": "string",
+                    "description": "需要转换的长链接，支持http://、https://、weixin://wxpay 格式的url"
+                }
+            }
+        }
+    }
+}
